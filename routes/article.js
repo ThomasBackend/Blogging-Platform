@@ -8,4 +8,4 @@ const router = express.Router();
 router.post('/', createArticle)
 
 
-module.exports = express;
+module.exports = router;
