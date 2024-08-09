@@ -1,5 +1,6 @@
 const  { Article }  = require('../models/article');
 
+
 const createArticle = async (req, res) => {
   try {
     const { userId, firstName, lastName, email, password, phone } = req.body;
