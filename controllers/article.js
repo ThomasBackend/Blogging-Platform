@@ -1,5 +1,5 @@
-const { ValidationError } = require('sequelize');
 const   Article   = require('../models/article');
+const { ObjectId } = require('mongodb')
 
 const createArticle = async (req, res) => {
   try {
@@ -22,7 +22,7 @@ const createArticle = async (req, res) => {
     };
 
     if(!Array.isArray(tags)){
-      return res.status(400).json({error : "Tags must be an array"})
+      return res.status(400).json({error : "Tags must be in an array"})
     }
 
     const newArticle = await Article.create({ 
@@ -65,12 +65,16 @@ const getArticlesByTags = async (req,res) =>{
     };
 
     if(!Array.isArray(tags)){
-      return res.status(400).send("Tags must be an array")
+      return res.status(400).send("Tags must be in an array")
     };
 
-    const articles = await Article.find({genres:{
+    const articles = await Article.find({tags :{
       $all : tags
     }});
+
+    if(!articles){
+      return res.status(404).json({error : "There are no articles with the required tags"})
+    }
 
     return res.status(200).json({result : articles});
 
@@ -88,7 +92,7 @@ const getArticleById = async (req,res) => {
     const article = await Article.findById(id).exec();
 
     if(!article){
-      return res.status(404).json({error: "No article exists with this Id"})
+      return res.status(404).json({error: "No article exists with this Id"});
     }
 
     return res.status(200).json({article})
@@ -101,6 +105,12 @@ const getArticleById = async (req,res) => {
 const deleteAnArticle = async (req,res) => {
   try {
     const {id} = req.params;
+
+    const checkExistence = await Article.findById(id).exec();
+
+    if(!checkExistence){
+      return res.status(404).json({error : "No existing article matches this ID"});
+    }
 
     const deleteArticle = await Article.findByIdAndDelete(id).exec();
 
@@ -119,6 +129,12 @@ const updateArticleTitle = async (req,res) => {
 
     if(!title){
       return res.status(422).json({error : "A new article title is required"});
+    }
+
+    const checkExistence = await Article.findById(id).exec();
+
+    if(!checkExistence){
+      return res.status(404).json({error : "No existing article matches this ID"});
     }
 
     const updateArticle = await Article.findByIdAndUpdate(id, {title : title}).exec();
@@ -140,6 +156,12 @@ const updateArticleBody = async (req,res) => {
       return res.status(422).json({error : "A new article body is required"});
     }
 
+    const checkExistence = await Article.findById(id).exec();
+
+    if(!checkExistence){
+      return res.status(404).json({error : "No existing article matches this ID"});
+    }
+
     const updateArticle = await Article.findByIdAndUpdate(id, {body : body}).exec();
 
     return res.status(200).json({updateArticle});
@@ -159,6 +181,12 @@ const updateArticleAuthor = async (req,res) => {
       return res.status(422).json({error : "A new article author is required"});
     }
 
+    const checkExistence = await Article.findById(id).exec();
+
+    if(!checkExistence){
+      return res.status(404).json({error : "No existing article matches this ID"});
+    }
+
     const updateArticle = await Article.findByIdAndUpdate(id, {author : author}).exec();
 
     return res.status(200).json({updateArticle});
@@ -171,7 +199,27 @@ const updateArticleAuthor = async (req,res) => {
 
 const addTagsToArticle = async (req,res) => {
   try {
-    
+    const {id} = req.params;
+    const {tags} = req.body;
+
+    if(!tags){
+      return res.status(422).send("Tags is required");
+    };
+
+    if(!Array.isArray(tags)){
+      return res.status(400).send("Tags must be an array");
+    };
+
+    const checkExistence = await Article.findById(id).exec();
+
+    if(!checkExistence){
+      return res.status(404).json({error : "No existing article matches this ID"})
+    }
+
+    const updateTags = await Article.findByIdAndUpdate(id,{$push : {tags : {$each : tags}}}).exec();
+
+    return res.status(200).json({updateTags})
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
@@ -180,6 +228,34 @@ const addTagsToArticle = async (req,res) => {
 
 const removeTagsFromArticle = async (req,res) => {
   try {
+    const {id} = req.params;
+    const {tags} = req.body;
+
+    if(!tags){
+      return res.status(422).send("Tags is required");
+    };
+
+    if(!Array.isArray(tags)){
+      return res.status(400).send("Tags must be an array");
+    };
+
+    const checkExistence = await Article.findById(id).exec();
+
+    if(!checkExistence){
+      return res.status(404).json({error : "No existing article matches this ID"});
+    }
+
+    const checkTags = await Article.find({__id : ObjectId(id) ,tags :{
+      $all : tags
+    }});
+
+    if(!checkTags){
+    return res.status(404).json({error : "The article does not include one or more of the requested tags"});
+    }
+
+    const updateTags = await Article.findByIdAndUpdate(id,{$pull : {tags : {$each : tags}}}).exec();
+
+    return res.status(200).json({updateTags})
     
   } catch (error) {
     console.log(error);
