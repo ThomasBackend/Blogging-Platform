@@ -83,7 +83,6 @@ const getArticlesByTags = async (req,res) =>{
 
 const getArticleById = async (req,res) => {
   try {
-
     const { id } = req.params;
 
     const article = await Article.findById(id).exec();
@@ -101,6 +100,11 @@ const getArticleById = async (req,res) => {
 
 const deleteAnArticle = async (req,res) => {
   try {
+    const {id} = req.params;
+
+    const deleteArticle = await Article.findByIdAndDelete(id).exec();
+
+    return res.status(200).json({deleteArticle})
     
   } catch (error) {
     console.log(error);
@@ -110,7 +114,17 @@ const deleteAnArticle = async (req,res) => {
 
 const updateArticleTitle = async (req,res) => {
   try {
-    
+    const {id} = req.params;
+    const {title} = req.body;
+
+    if(!title){
+      return res.status(422).json({error : "A new article title is required"});
+    }
+
+    const updateArticle = await Article.findByIdAndUpdate(id, {title : title}).exec();
+
+    return res.status(200).json({updateArticle})
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
@@ -119,7 +133,17 @@ const updateArticleTitle = async (req,res) => {
 
 const updateArticleBody = async (req,res) => {
   try {
-    
+    const {id} = req.params;
+    const {body} = req.body;
+
+    if(!body){
+      return res.status(422).json({error : "A new article body is required"});
+    }
+
+    const updateArticle = await Article.findByIdAndUpdate(id, {body : body}).exec();
+
+    return res.status(200).json({updateArticle});
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
@@ -128,7 +152,17 @@ const updateArticleBody = async (req,res) => {
 
 const updateArticleAuthor = async (req,res) => {
   try {
-    
+    const {id} = req.params;
+    const {author} = req.body;
+
+    if(!author){
+      return res.status(422).json({error : "A new article author is required"});
+    }
+
+    const updateArticle = await Article.findByIdAndUpdate(id, {author : author}).exec();
+
+    return res.status(200).json({updateArticle});
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
