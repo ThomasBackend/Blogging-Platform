@@ -6,23 +6,23 @@ const createArticle = async (req, res) => {
     const { title, body, author, tags } = req.body;
 
     if(!title){
-      return res.status(422).send("Title is required")
+      return res.status(422).json({error :"Title is required"})
     };
 
     if(!body){
-      return res.status(422).send("Body is required")
+      return res.status(422).json({error : "Body is required"})
     };
 
     if(!author){
-      return res.status(422).send("Author is required")
+      return res.status(422).json({error : "Author is required"})
     };
 
     if(!tags){
-      return res.status(422).send("Tags is required")
+      return res.status(422).json({error : "Tags is required"})
     };
 
     if(!Array.isArray(tags)){
-      return res.status(400).send("Tags must be an array")
+      return res.status(400).json({error : "Tags must be an array"})
     }
 
     const newArticle = await Article.create({ 
@@ -44,6 +44,10 @@ const getArticlesByPublishingDate = async (req,res) =>{
   try {
     
     const articles = await Article.find().sort({createdAt : 1});
+
+    if(!articles){
+      return res.status(404).json({error : "There are no articles"})
+    }
 
     return res.status(200).json({result : articles})
   } catch (error) {
@@ -79,7 +83,16 @@ const getArticlesByTags = async (req,res) =>{
 
 const getArticleById = async (req,res) => {
   try {
-    
+
+    const { id } = req.params;
+
+    const article = await Article.findById(id).exec();
+
+    if(!article){
+      return res.status(404).json({error: "No article exists with this Id"})
+    }
+
+    return res.status(200).json({article})
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
