@@ -1,5 +1,4 @@
 const   Article   = require('../models/article');
-const { ObjectId } = require('mongodb')
 
 const createArticle = async (req, res) => {
   try {
@@ -43,7 +42,7 @@ const createArticle = async (req, res) => {
 const getArticlesByPublishingDate = async (req,res) =>{
   try {
     
-    const articles = await Article.find().sort({createdAt : 1});
+    const articles = await Article.find().sort({createdAt : -1});
 
     if(!articles){
       return res.status(404).json({error : "There are no articles"})
@@ -139,7 +138,7 @@ const updateArticleTitle = async (req,res) => {
 
     const updateArticle = await Article.findByIdAndUpdate(id, {title : title}).exec();
 
-    return res.status(200).json({updateArticle})
+    return res.status(200).json({newTitle : title, oldTitle : updateArticle.title})
 
   } catch (error) {
     console.log(error);
@@ -164,7 +163,7 @@ const updateArticleBody = async (req,res) => {
 
     const updateArticle = await Article.findByIdAndUpdate(id, {body : body}).exec();
 
-    return res.status(200).json({updateArticle});
+    return res.status(200).json({newBody : body, oldBody : updateArticle.body});
 
   } catch (error) {
     console.log(error);
@@ -189,7 +188,7 @@ const updateArticleAuthor = async (req,res) => {
 
     const updateArticle = await Article.findByIdAndUpdate(id, {author : author}).exec();
 
-    return res.status(200).json({updateArticle});
+    return res.status(200).json({newAuthor : author, oldAuthor : updateArticle.author});
 
   } catch (error) {
     console.log(error);
@@ -245,15 +244,15 @@ const removeTagsFromArticle = async (req,res) => {
       return res.status(404).json({error : "No existing article matches this ID"});
     }
 
-    const checkTags = await Article.find({__id : ObjectId(id) ,tags :{
+    const checkTags = await Article.find({_id : id ,tags :{
       $all : tags
     }});
 
-    if(!checkTags){
+    if(checkTags.length === 0){
     return res.status(404).json({error : "The article does not include one or more of the requested tags"});
     }
 
-    const updateTags = await Article.findByIdAndUpdate(id,{$pull : {tags : {$each : tags}}}).exec();
+    const updateTags = await Article.findByIdAndUpdate(id,{$pullAll : {tags :  tags}}).exec();
 
     return res.status(200).json({updateTags})
     
@@ -264,5 +263,14 @@ const removeTagsFromArticle = async (req,res) => {
 }
 
 module.exports = {
-  createArticle
+  createArticle,
+  getArticlesByPublishingDate,
+  getArticlesByTags,
+  getArticleById,
+  deleteAnArticle,
+  updateArticleTitle,
+  updateArticleBody,
+  updateArticleAuthor,
+  addTagsToArticle,
+  removeTagsFromArticle
 };

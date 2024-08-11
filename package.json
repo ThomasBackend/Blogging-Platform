@@ -19,7 +19,6 @@
     "express": "^4.19.2",
     "fs": "^0.0.1-security",
     "module": "^1.2.5",
-    "mongodb": "6.8",
     "mongoose": "^8.5.2"
   },
   "devDependencies": {
